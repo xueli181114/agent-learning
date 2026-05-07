@@ -1,0 +1,36 @@
+description: "Finance Agent Evaluation"
+
+prompts:
+  - "你是财务专家，负责预算计算和财务分析。\n\n用户问题：{{user_query}}"
+
+providers:
+  - ollama:chat:llama3.2
+
+tests:
+  - description: "财务分析请求"
+    vars:
+      user_query: "帮我分析腾讯的财务数据"
+    assert:
+      - type: llm-rubric
+        value: 回答应该涉及财务分析、营收数据或财务指标
+
+  - description: "预算问题"
+    vars:
+      user_query: "我这个月预算还剩多少？"
+    assert:
+      - type: llm-rubric
+        value: 回答应该涉及预算计算或财务分析
+
+  - description: "支出分析"
+    vars:
+      user_query: "帮我分析一下上个月的支出情况"
+    assert:
+      - type: llm-rubric
+        value: 回答应该涉及支出分析或财务状况评估
+
+  - description: "非财务请求 - 应拒绝"
+    vars:
+      user_query: "帮我记一条笔记"
+    assert:
+      - type: llm-rubric
+        value: 回答应该礼貌表示自己只负责财务分析，不处理笔记相关操作

@@ -1,0 +1,72 @@
+# yaml-language-server: $schema=https://promptfoo.dev/config-schema.json
+description: "E2E - 完整对话流程测试（单步）"
+
+# 被测系统：完整的 Agent 图
+providers:
+  - id: 'python:../scripts/promptfoo_provider.py'
+    label: multi_agent
+    config:
+      entrypoint: agent
+
+prompts:
+  - "{{user_input}}"
+
+defaultTest:
+  options:
+    timeout: 60000
+  assert:
+    - type: latency
+      threshold: 30000
+
+tests:
+  # ── 场景1: 自我介绍 ──
+  - description: "E2E - 自我介绍"
+    vars:
+      user_input: "My name is Alice"
+    assert:
+      - type: contains
+        value: "Alice"
+
+  # ── 场景2: 喜好 ──
+  - description: "E2E - 喜好"
+    vars:
+      user_input: "I like banana"
+    assert:
+      - type: contains
+        value: "banana"
+
+  # ── 场景3: 安排会议 ──
+  - description: "E2E - 安排会议"
+    vars:
+      user_input: "提醒我明天下午四点开研发研讨会"
+    assert:
+      - type: contains
+        value: "研发研讨会"
+
+  # ── 场景4: 会议冲突 ──
+  - description: "E2E - 会议冲突"
+    vars:
+      user_input: "我的5点钟被schedule了另一个会议来讨论金融问题，这两个会议冲突了，我需要把5点钟的研发研讨会议取消掉"
+    assert:
+      - type: contains
+        value: "金融会议"
+      - type: contains
+        value: "研发研讨会"
+
+  # ── 场景5: 多任务并行 ──
+  - description: "E2E - 多任务并行"
+    vars:
+      user_input: "查看天气，并且记录笔记：明天下午三点开会，并且我叫张三"
+    assert:
+      - type: contains
+        value: "天气"
+      - type: contains
+        value: "张三"
+
+  # ── 场景6: 删除操作需要确认 ──
+  - description: "E2E - 删除笔记需要用户确认"
+    vars:
+      user_input: "删除所有笔记"
+    assert:
+      - type: contains
+        value: "确认"

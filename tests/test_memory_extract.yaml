@@ -1,0 +1,163 @@
+# yaml-language-server: $schema=https://promptfoo.dev/config-schema.json
+description: "Memory Extract - 记忆提取测试"
+
+# 被测系统：Agent 图的 Memory 节点
+providers:
+  - id: 'python:../scripts/promptfoo_provider.py'
+    label: multi_agent-memory
+    config:
+      entrypoint: memory
+
+prompts:
+  - "{{conversation}}"
+
+defaultTest:
+  options:
+    timeout: 30000
+  assert:
+    - type: latency
+      threshold: 10000
+
+tests:
+  # ── 名字提取 ──
+  - description: "提取 - 中文名字"
+    vars:
+      conversation: |
+        用户：我叫Alice
+        助手：你好Alice，很高兴认识你！
+    assert:
+      - type: contains
+        value: "Alice"
+      - type: not-contains
+        value: "无"
+
+  - description: "提取 - 英文名字"
+    vars:
+      conversation: |
+        用户：My name is Alice
+        助手：Hello Alice, nice to meet you!
+    assert:
+      - type: contains
+        value: "Alice"
+      - type: not-contains
+        value: "无"
+
+  # ── 喜好提取 ──
+  - description: "提取 - 喜好"
+    vars:
+      conversation: |
+        用户：我喜欢游泳
+        助手：游泳是很好的运动！
+    assert:
+      - type: contains
+        value: "游泳"
+      - type: not-contains
+        value: "无"
+
+  - description: "提取 - 英文喜好"
+    vars:
+      conversation: |
+        用户：I like banana
+        助手：Banana is healthy!
+    assert:
+      - type: contains
+        value: "banana"
+      - type: not-contains
+        value: "无"
+
+  # ── 日程提取 ──
+  - description: "提取 - 会议安排"
+    vars:
+      conversation: |
+        用户：提醒我明天下午四点开研发研讨会
+        助手：好的，已记录：明天下午四点开研发研讨会
+    assert:
+      - type: contains
+        value: "研发研讨会"
+      - type: not-contains
+        value: "无"
+
+  - description: "提取 - 会议时间变更"
+    vars:
+      conversation: |
+        用户：My meeting changed to 5:00 pm
+        助手：好的，会议时间已更新为下午5点
+    assert:
+      - type: contains
+        value: "5:00"
+      - type: not-contains
+        value: "无"
+
+  # ── 会议冲突场景 ──
+  - description: "提取 - 会议冲突（金融会议 + 取消研发研讨会）"
+    vars:
+      conversation: |
+        用户：我的5点钟被schedule了另一个会议来讨论金融问题，这两个会议冲突了，我需要把5点钟的研发研讨会议取消掉
+        助手：好的，已记录金融会议信息，并取消了研发研讨会
+    assert:
+      - type: contains
+        value: "金融会议"
+      - type: contains
+        value: "研发研讨会"
+      - type: not-contains
+        value: "无"
+
+  # ── 无信息场景 ──
+  - description: "提取 - 无信息应输出无"
+    vars:
+      conversation: |
+        用户：今天天气怎么样？
+        助手：今天北京天气cloudy，25°C
+    assert:
+      - type: equals
+        value: "无"
+
+  - description: "提取 - 简单问候无信息"
+    vars:
+      conversation: |
+        用户：你好
+        助手：你好！有什么可以帮你的吗？
+    assert:
+      - type: equals
+        value: "无"
+
+  # ── 多信息提取 ──
+  - description: "提取 - 多条信息"
+    vars:
+      conversation: |
+        用户：我叫Alice
+        助手：你好Alice！
+        用户：我喜欢游泳
+        助手：游泳很好！
+        用户：提醒我明天下午四点开会
+        助手：好的，已记录
+    assert:
+      - type: contains
+        value: "Alice"
+      - type: contains
+        value: "游泳"
+      - type: contains
+        value: "开会"
+      - type: not-contains
+        value: "无"
+
+  # ── 边界情况 ──
+  - description: "提取 - 迟到信息"
+    vars:
+      conversation: |
+        用户：I will be late.
+        助手：好的，已记录
+    assert:
+      - type: contains
+        value: "late"
+      - type: not-contains
+        value: "无"
+
+  - description: "提取 - 会议查询（无新信息）"
+    vars:
+      conversation: |
+        用户：Will my meeting start at 4:00pm?
+        助手：根据记录，你的会议已改到下午5点
+    assert:
+      - type: equals
+        value: "无"

@@ -1,0 +1,36 @@
+description: "Note Agent Evaluation"
+
+prompts:
+  - "你是笔记专家，负责记录和整理信息。\n\n用户问题：{{user_query}}"
+
+providers:
+  - ollama:chat:llama3.2
+
+tests:
+  - description: "记笔记"
+    vars:
+      user_query: "帮我记一条笔记：明天下午三点开会"
+    assert:
+      - type: llm-rubric
+        value: 回答应该表示正在记录或保存笔记信息
+
+  - description: "列出笔记"
+    vars:
+      user_query: "我有哪些笔记？"
+    assert:
+      - type: llm-rubric
+        value: 回答应该提及查看笔记列表或回顾已有笔记
+
+  - description: "删除笔记"
+    vars:
+      user_query: "帮我删除昨天的会议笔记"
+    assert:
+      - type: llm-rubric
+        value: 回答应该涉及删除笔记或确认删除操作
+
+  - description: "非笔记请求 - 应拒绝"
+    vars:
+      user_query: "今天天气怎么样？"
+    assert:
+      - type: llm-rubric
+        value: 回答应该礼貌表示自己只负责笔记管理，不处理天气查询

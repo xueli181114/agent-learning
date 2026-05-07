@@ -1,0 +1,151 @@
+# yaml-language-server: $schema=https://promptfoo.dev/config-schema.json
+description: "Supervisor Routing - Agent 路由测试"
+
+# 被测系统：Agent 图的 Supervisor 节点
+# 使用 python: 前缀直接指定 Python 脚本路径
+providers:
+  - id: 'python:../scripts/promptfoo_provider.py'
+    label: multi_agent-supervisor
+    config:
+      entrypoint: supervisor
+
+prompts:
+  - "{{task}}"
+
+defaultTest:
+  options:
+    timeout: 30000
+  assert:
+    - type: latency
+      threshold: 5000
+
+tests:
+  # ── personal_assistant ──
+  - description: "路由 - 自我介绍 → personal_assistant"
+    vars:
+      task: "我叫Alice"
+    assert:
+      - type: equals
+        value: "personal_assistant"
+
+  - description: "路由 - 喜好 → personal_assistant"
+    vars:
+      task: "我喜欢游泳"
+    assert:
+      - type: equals
+        value: "personal_assistant"
+
+  - description: "路由 - 英文自我介绍 → personal_assistant"
+    vars:
+      task: "My name is Alice"
+    assert:
+      - type: equals
+        value: "personal_assistant"
+
+  - description: "路由 - 英文喜好 → personal_assistant"
+    vars:
+      task: "I like banana"
+    assert:
+      - type: equals
+        value: "personal_assistant"
+
+  # ── note_agent ──
+  - description: "路由 - 记笔记 → note_agent"
+    vars:
+      task: "帮我记一条笔记：明天下午三点开会"
+    assert:
+      - type: equals
+        value: "note_agent"
+
+  - description: "路由 - 列出笔记 → note_agent"
+    vars:
+      task: "我有哪些笔记？"
+    assert:
+      - type: equals
+        value: "note_agent"
+
+  - description: "路由 - 删除笔记 → note_agent"
+    vars:
+      task: "删除笔记 test.md"
+    assert:
+      - type: equals
+        value: "note_agent"
+
+  - description: "路由 - 会议安排 → note_agent（即使涉及金融）"
+    vars:
+      task: "5点钟的研发研讨会议和金融会议冲突，需要取消研发研讨会议"
+    assert:
+      - type: equals
+        value: "note_agent"
+
+  - description: "路由 - 会议查询 → note_agent"
+    vars:
+      task: "我明天有几个会议，是什么会议？"
+    assert:
+      - type: equals
+        value: "note_agent"
+
+  - description: "路由 - 提醒事项 → note_agent"
+    vars:
+      task: "提醒我明天下午四点开会"
+    assert:
+      - type: equals
+        value: "note_agent"
+
+  - description: "路由 - 修改会议时间 → note_agent"
+    vars:
+      task: "My meeting changed to 5:00 pm"
+    assert:
+      - type: equals
+        value: "note_agent"
+
+  - description: "路由 - 会议状态查询 → note_agent"
+    vars:
+      task: "Will my meeting start at 4:00pm?"
+    assert:
+      - type: equals
+        value: "note_agent"
+
+  # ── fina_agent ──
+  - description: "路由 - 财务分析 → fina_agent"
+    vars:
+      task: "帮我分析腾讯的财务数据"
+    assert:
+      - type: equals
+        value: "fina_agent"
+
+  - description: "路由 - 预算查询 → fina_agent"
+    vars:
+      task: "我这个月预算还剩多少？"
+    assert:
+      - type: equals
+        value: "fina_agent"
+
+  - description: "路由 - 股票查询 → fina_agent"
+    vars:
+      task: "查看腾讯股票"
+    assert:
+      - type: equals
+        value: "fina_agent"
+
+  # ── weather_agent ──
+  - description: "路由 - 天气查询 → weather_agent"
+    vars:
+      task: "今天北京天气怎么样？"
+    assert:
+      - type: equals
+        value: "weather_agent"
+
+  - description: "路由 - 多城市天气 → weather_agent"
+    vars:
+      task: "北京和上海哪个更冷？"
+    assert:
+      - type: equals
+        value: "weather_agent"
+
+  - description: "路由 - 英文天气 → weather_agent"
+    vars:
+      task: "What's the weather in Beijing?"
+    assert:
+      - type: equals
+        value: "weather_agent"

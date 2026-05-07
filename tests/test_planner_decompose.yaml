@@ -1,0 +1,153 @@
+# yaml-language-server: $schema=https://promptfoo.dev/config-schema.json
+description: "Planner Decompose - 任务拆解测试"
+
+# 被测系统：Agent 图的 Planner 节点
+providers:
+  - id: 'python:../scripts/promptfoo_provider.py'
+    label: multi_agent-planner
+    config:
+      entrypoint: planner
+
+prompts:
+  - "{{user_input}}"
+
+defaultTest:
+  options:
+    timeout: 30000
+  assert:
+    - type: latency
+      threshold: 10000
+
+tests:
+  - description: "多任务拆解 - 删除笔记 + 查看天气"
+    vars:
+      user_input: "删除笔记 test.md，并查看天气。"
+    assert:
+      - type: contains
+        value: "删除笔记 test.md"
+      - type: contains
+        value: "查看天气"
+      - type: contains
+        value: "1."
+      - type: contains
+        value: "2."
+
+  - description: "多任务拆解 - 提醒 + 记录笔记"
+    vars:
+      user_input: "提醒我明天下午四点开会并记录笔记"
+    assert:
+      - type: contains
+        value: "提醒"
+      - type: contains
+        value: "记录笔记"
+      - type: contains
+        value: "1."
+      - type: contains
+        value: "2."
+
+  - description: "自我介绍 - 我叫XXX 不应加记录笔记前缀"
+    vars:
+      user_input: "我叫大头儿子"
+    assert:
+      - type: not-contains
+        value: "记录笔记"
+      - type: contains
+        value: "我叫大头儿子"
+      - type: contains
+        value: "1."
+
+  - description: "自我介绍 - 我喜欢XXX 不应加记录笔记前缀"
+    vars:
+      user_input: "我喜欢游泳"
+    assert:
+      - type: not-contains
+        value: "记录笔记"
+      - type: contains
+        value: "我喜欢游泳"
+      - type: contains
+        value: "1."
+
+  - description: "完整场景 - 会议冲突不应拆分"
+    vars:
+      user_input: "我的5点钟被schedule了另一个会议来讨论金融问题，这两个会议冲突了，我需要把5点钟的研发研讨会议取消掉"
+    assert:
+      - type: contains
+        value: "金融会议"
+      - type: contains
+        value: "研发研讨会议"
+      - type: contains
+        value: "取消"
+      - type: not-contains
+        value: "2."
+      - type: contains
+        value: "1."
+
+  - description: "问句 - 完整问句不应拆分"
+    vars:
+      user_input: "我明天有几个会议，是什么主题的？"
+    assert:
+      - type: contains
+        value: "我明天有几个会议"
+      - type: contains
+        value: "是什么主题的"
+      - type: not-contains
+        value: "2."
+      - type: contains
+        value: "1."
+
+  - description: "问句 - 会议查询"
+    vars:
+      user_input: "我明天有几个会议，是什么会议？"
+    assert:
+      - type: contains
+        value: "我明天有几个会议"
+      - type: contains
+        value: "是什么会议"
+      - type: not-contains
+        value: "2."
+      - type: contains
+        value: "1."
+
+  - description: "英文自我介绍 - My name is"
+    vars:
+      user_input: "My name is Alice"
+    assert:
+      - type: not-contains
+        value: "记录笔记"
+      - type: contains
+        value: "Alice"
+      - type: contains
+        value: "1."
+
+  - description: "英文喜好 - I like"
+    vars:
+      user_input: "I like banana"
+    assert:
+      - type: not-contains
+        value: "记录笔记"
+      - type: contains
+        value: "banana"
+      - type: contains
+        value: "1."
+
+  - description: "单任务 - 查看天气"
+    vars:
+      user_input: "今天北京天气怎么样？"
+    assert:
+      - type: contains
+        value: "天气"
+      - type: contains
+        value: "北京"
+      - type: not-contains
+        value: "2."
+      - type: contains
+        value: "1."
+
+  - description: "单任务 - 删除笔记"
+    vars:
+      user_input: "帮我删除昨天的会议笔记"
+    assert:
+      - type: contains
+        value: "删除"
+      - type: contains
+        value: "1."

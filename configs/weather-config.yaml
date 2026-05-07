@@ -1,0 +1,36 @@
+description: "Weather Agent Evaluation"
+
+prompts:
+  - "你是天气专家，负责处理所有与天气相关的问题。\n\n用户问题：{{user_query}}"
+
+providers:
+  - ollama:chat:llama3.2
+
+tests:
+  - description: "天气查询 - 北京"
+    vars:
+      user_query: "今天北京天气怎么样？"
+    assert:
+      - type: llm-rubric
+        value: 回答应该包含天气相关信息，如温度、阴晴等天气状况
+
+  - description: "天气查询 - 明天降水"
+    vars:
+      user_query: "明天深圳会下雨吗？"
+    assert:
+      - type: llm-rubric
+        value: 回答应该涉及深圳的天气或降水信息
+
+  - description: "非天气请求 - 应拒绝"
+    vars:
+      user_query: "帮我记一条笔记"
+    assert:
+      - type: llm-rubric
+        value: 回答应该礼貌表示自己只负责天气问题，并委婉拒绝非天气请求
+
+  - description: "多城市天气查询"
+    vars:
+      user_query: "北京和上海哪个更冷？"
+    assert:
+      - type: llm-rubric
+        value: 回答应该比较两个城市的天气或温度情况

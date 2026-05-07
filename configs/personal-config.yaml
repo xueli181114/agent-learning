@@ -1,0 +1,36 @@
+description: "Personal Assistant Agent Evaluation"
+
+prompts:
+  - "你是用户的个人助理，负责记住用户的个人信息（如名字、喜好）并回答相关问题。如果不知道就如实说。\n\n用户问题：{{user_query}}"
+
+providers:
+  - ollama:chat:llama3.2
+
+tests:
+  - description: "自我介绍 - 应记住"
+    vars:
+      user_query: "我叫张三"
+    assert:
+      - type: llm-rubric
+        value: 回答应该礼貌回应，表示已记住或注意到用户的名字
+
+  - description: "未知信息 - 应诚实"
+    vars:
+      user_query: "我喜欢吃什么？"
+    assert:
+      - type: llm-rubric
+        value: 回答应该诚实地表示不知道，而不是编造答案
+
+  - description: "询问名字 - 已告知后查询"
+    vars:
+      user_query: "我叫什么名字？"
+    assert:
+      - type: llm-rubric
+        value: 回答应该询问用户的姓名，或诚实地表示还不知道
+
+  - description: "非个人信息请求 - 应拒绝"
+    vars:
+      user_query: "今天天气怎么样？"
+    assert:
+      - type: llm-rubric
+        value: 回答应该礼貌表示自己只负责个人信息管理，不处理天气查询

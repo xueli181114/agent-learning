@@ -1,0 +1,91 @@
+# yaml-language-server: $schema=https://promptfoo.dev/config-schema.json
+description: "Planner Grouping - 并行分组测试"
+
+# 被测系统：Agent 图的 Planner 节点（分组功能）
+providers:
+  - id: 'python:../scripts/promptfoo_provider.py'
+    label: multi_agent-planner
+    config:
+      entrypoint: planner
+
+prompts:
+  - "{{user_input}}"
+
+defaultTest:
+  options:
+    timeout: 30000
+  assert:
+    - type: latency
+      threshold: 10000
+
+tests:
+  - description: "无依赖 - 删除笔记 + 查看天气 可并行"
+    vars:
+      user_input: "删除笔记 test.md，查看天气"
+    assert:
+      - type: contains
+        value: "删除笔记 test.md"
+      - type: contains
+        value: "查看天气"
+
+  - description: "无依赖 - 查看天气 + 财务分析 可并行"
+    vars:
+      user_input: "查看天气，分析腾讯财务数据"
+    assert:
+      - type: contains
+        value: "查看天气"
+      - type: contains
+        value: "分析腾讯财务数据"
+
+  - description: "单个场景 - 会议冲突 保持完整"
+    vars:
+      user_input: "我的5点钟被schedule了另一个会议来讨论金融问题，这两个会议冲突了，我需要把5点钟的研发研讨会议取消掉"
+    assert:
+      - type: contains
+        value: "金融会议"
+      - type: contains
+        value: "研发研讨会议"
+      - type: contains
+        value: "取消"
+      - type: not-contains
+        value: "2."
+
+  - description: "完整问句 - 会议查询 保持完整"
+    vars:
+      user_input: "我明天有几个会议，是什么会议？"
+    assert:
+      - type: contains
+        value: "我明天有几个会议"
+      - type: contains
+        value: "是什么会议"
+      - type: not-contains
+        value: "2."
+
+  - description: "混合 - 自我介绍 + 天气查询 可并行"
+    vars:
+      user_input: "我叫Alice，查看天气"
+    assert:
+      - type: contains
+        value: "我叫Alice"
+      - type: contains
+        value: "查看天气"
+
+  - description: "单任务 - 只有1个任务"
+    vars:
+      user_input: "删除笔记 test.md"
+    assert:
+      - type: contains
+        value: "删除笔记 test.md"
+      - type: contains
+        value: "1."
+
+  - description: "三个独立任务 - 全部可并行"
+    vars:
+      user_input: "查看天气，分析腾讯财务数据，我叫Alice"
+    assert:
+      - type: contains
+        value: "查看天气"
+      - type: contains
+        value: "分析腾讯财务数据"
+      - type: contains
+        value: "我叫Alice"
